@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device‐width, initial‐scale=1.0" />
     <title>EVC BESS Consultant</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script> <!-- For reading Excel files -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For plotting graphs -->
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="header">
         <h1>EVC BESS Consultant</h1>
-        <p>Welcome to the BESS Calculator</p>
     </div>
 
     <div class="content">
         <h2>Upload Load Profile (Excel or CSV)</h2>
-        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
-        <button onclick="processFile()">Process File</button>
-
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+        <button id="processBtn">Process File</button>
         <div id="message"></div>
 
         <h2>Load Profile Graph</h2>
@@ -36,7 +34,6 @@
                 </tr>
             </thead>
             <tbody id="resultsBody">
-                <!-- Results will be populated here -->
             </tbody>
         </table>
     </div>
