@@ -17,14 +17,13 @@ function processFile() {
         let workbook;
         try {
             if (file.name.endsWith('.csv')) {
-                // parse CSV manually
                 const text = data;
                 const rows = text.split(/\r?\n/).filter(r => r.trim().length > 0);
                 const header = rows[0].split(',');
                 const jsonData = rows.slice(1).map(r => {
                     const vals = r.split(',');
                     const obj = {};
-                    header.forEach((h,i) => obj[h.trim()] = vals[i].trim());
+                    header.forEach((h, i) => obj[h.trim()] = vals[i].trim());
                     return obj;
                 });
                 computeBESS(jsonData);
@@ -50,7 +49,7 @@ function processFile() {
 
 function validateData(data) {
     if (!data || data.length === 0) return false;
-    const required = ['Date','Time','Power_kW'];
+    const required = ['Date', 'Time', 'Power_kW'];
     return required.every(col => data[0].hasOwnProperty(col));
 }
 
@@ -60,10 +59,10 @@ function computeBESS(data) {
         return;
     }
 
-    // Group data by date and calculate daily totals
+    // Group the data by Date, and convert Time to hours
     const groupedData = groupDataByDate(data);
 
-    // Plot load profile graph
+    // Plot load profile graph for each day
     plotLoadProfile(groupedData);
 }
 
@@ -94,6 +93,12 @@ function plotLoadProfile(groupedData) {
         const timeArr = groupedData[date].map(item => item.time);
         const powerArr = groupedData[date].map(item => item.power);
 
+        // Format time labels for the x-axis (ensure it's time of day, e.g., HH:mm)
+        const formattedTimeLabels = timeArr.map(time => {
+            const [hour, minute] = time.split(':');
+            return `${hour}:${minute}`;
+        });
+
         // Create a dataset for each day
         datasets.push({
             label: date,
@@ -103,21 +108,18 @@ function plotLoadProfile(groupedData) {
             fill: false,
         });
 
-        // Add labels for time on x-axis (formatting)
-        labels.push(...timeArr);
+        // Add labels for time on x-axis (formatted time)
+        labels.push(...formattedTimeLabels);
     }
 
-    // Define peak hours (2 PM to 10 PM)
-    const peakHours = [];
-    for (let i = peakStart; i < peakEnd; i++) {
-        peakHours.push(i);
-    }
-
-    // Highlight peak hours region
+    // Highlight peak hours region (2 PM to 10 PM)
     const backgroundColor = Array(labels.length).fill('rgba(255, 182, 193, 0.3)');
-    peakHours.forEach(hour => {
-        backgroundColor[hour] = 'rgba(255, 0, 0, 0.3)'; // Set peak hours to a pink shade
-    });
+    for (let hour = peakStart; hour < peakEnd; hour++) {
+        const startIdx = labels.findIndex(label => label.startsWith(`${hour}:`));
+        if (startIdx !== -1) {
+            backgroundColor[startIdx] = 'rgba(255, 0, 0, 0.3)';
+        }
+    }
 
     new Chart(ctx, {
         type: 'line',
@@ -131,9 +133,8 @@ function plotLoadProfile(groupedData) {
                 x: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value, index, values) {
-                            return values[index];
-                        }
+                        maxRotation: 90,
+                        minRotation: 45
                     }
                 },
                 y: {
@@ -152,7 +153,7 @@ function plotLoadProfile(groupedData) {
                         yMax: Math.max(...groupedData[Object.keys(groupedData)[0]].map(item => item.power)),
                         xMin: peakStart,
                         xMax: peakEnd,
-                        backgroundColor: 'rgba(255, 182, 193, 0.3)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 0, 0, 0.3)',
                         borderWidth: 1
                     }]
