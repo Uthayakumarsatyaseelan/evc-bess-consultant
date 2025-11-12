@@ -60,95 +60,103 @@ function computeBESS(data) {
         return;
     }
 
-    // parse DateTime and Power arrays
-    const dateTimeArr = data.map(r => new Date(r.Date + ' ' + r.Time));
-    const powerArr = data.map(r => parseFloat(r.Power_kW));
+    // Group data by date and calculate daily totals
+    const groupedData = groupDataByDate(data);
 
-    // Plot load profile
-    plotLoadProfile(dateTimeArr, powerArr);
-
-    // Compute unique days
-    const dayMap = {};
-    dateTimeArr.forEach((dt, idx) => {
-        const dayString = dt.toDateString();
-        if (!dayMap[dayString]) {
-            dayMap[dayString] = [];
-        }
-        dayMap[dayString].push(powerArr[idx]);
-    });
-
-    const dailyPeaks = [];
-    for (const day in dayMap) {
-        const pArr = dayMap[day];
-        const peak = Math.max(...pArr);
-        dailyPeaks.push(peak);
-    }
-
-    const P_max = Math.max(...powerArr);
-
-    // BESS specs
-    const bessPowerPerUnit_kW = 125;
-    const bessEnergyPerUnit_kWh = 261;
-    const costPerUnit_RM = 180000;
-    const demandChargeRate_RMpkWperMonth = 97.06;
-    const maxDepthOfDischarge = 0.85;
-    const powerMargin = 0;
-
-    const units = 5;
-    const thresholds = [];
-    const peakReductions = [];
-    const energyShaved = [];
-    const annualSavings = [];
-    const paybackYears = [];
-
-    for (let nUnits = 1; nUnits <= units; nUnits++) {
-        // Note: For simplicity we use a placeholder threshold method
-        const threshold = P_max * (1 - 0.1 * nUnits);
-        thresholds.push(threshold);
-        const reduction = P_max - threshold;
-        peakReductions.push(reduction);
-        const shavedEnergy = reduction * 0.25 * 24; // simplistic
-        energyShaved.push(shavedEnergy);
-        const annualSave = reduction * demandChargeRate_RMpkWperMonth * 12;
-        annualSavings.push(annualSave);
-        const payback = (nUnits * costPerUnit_RM) / annualSave;
-        paybackYears.push(payback);
-    }
-
-    // Populate results UI
-    const resultsBody = document.getElementById('resultsBody');
-    resultsBody.innerHTML = '';
-    for (let i = 0; i < units; i++) {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${i+1}</td>
-            <td>${thresholds[i].toFixed(2)}</td>
-            <td>${peakReductions[i].toFixed(2)}</td>
-            <td>${energyShaved[i].toFixed(2)}</td>
-            <td>${paybackYears[i].toFixed(2)}</td>
-        `;
-        resultsBody.appendChild(row);
-    }
+    // Plot load profile graph
+    plotLoadProfile(groupedData);
 }
 
-function plotLoadProfile(dateTimeArr, powerArr) {
+function groupDataByDate(data) {
+    const grouped = {};
+    data.forEach(row => {
+        const date = row.Date;
+        const time = row.Time;
+        const power = parseFloat(row.Power_kW);
+
+        if (!grouped[date]) {
+            grouped[date] = [];
+        }
+        grouped[date].push({ time, power });
+    });
+    return grouped;
+}
+
+function plotLoadProfile(groupedData) {
     const ctx = document.getElementById('loadProfileChart').getContext('2d');
-    const labels = dateTimeArr.map(dt => dt.toLocaleTimeString());
+
+    const labels = [];
+    const datasets = [];
+    const peakStart = 14; // 2 PM
+    const peakEnd = 22; // 10 PM
+
+    for (const date in groupedData) {
+        const timeArr = groupedData[date].map(item => item.time);
+        const powerArr = groupedData[date].map(item => item.power);
+
+        // Create a dataset for each day
+        datasets.push({
+            label: date,
+            data: powerArr,
+            borderColor: '#FF6600',
+            borderWidth: 2,
+            fill: false,
+        });
+
+        // Add labels for time on x-axis (formatting)
+        labels.push(...timeArr);
+    }
+
+    // Define peak hours (2 PM to 10 PM)
+    const peakHours = [];
+    for (let i = peakStart; i < peakEnd; i++) {
+        peakHours.push(i);
+    }
+
+    // Highlight peak hours region
+    const backgroundColor = Array(labels.length).fill('rgba(255, 182, 193, 0.3)');
+    peakHours.forEach(hour => {
+        backgroundColor[hour] = 'rgba(255, 0, 0, 0.3)'; // Set peak hours to a pink shade
+    });
+
     new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Power (kW)',
-                data: powerArr,
-                borderColor: '#FF6600',
-                borderWidth: 2,
-                fill: false
-            }]
+            datasets: datasets,
         },
         options: {
+            responsive: true,
             scales: {
-                y: { beginAtZero: true }
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return values[index];
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Power (kW)'
+                    }
+                }
+            },
+            plugins: {
+                annotation: {
+                    annotations: [{
+                        type: 'box',
+                        yMin: 0,
+                        yMax: Math.max(...groupedData[Object.keys(groupedData)[0]].map(item => item.power)),
+                        xMin: peakStart,
+                        xMax: peakEnd,
+                        backgroundColor: 'rgba(255, 182, 193, 0.3)',
+                        borderColor: 'rgba(255, 0, 0, 0.3)',
+                        borderWidth: 1
+                    }]
+                }
             }
         }
     });
