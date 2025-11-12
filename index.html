@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVC BESS Consultant</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For graphs -->
+</head>
+<body>
+    <div class="header">
+        <h1>EVC BESS Consultant</h1>
+        <p>Welcome to the BESS Calculator</p>
+    </div>
+
+    <div class="content">
+        <h2>Peak Load Profile</h2>
+        <canvas id="loadProfileChart"></canvas> <!-- Chart for Load Profile -->
+        
+        <h2>BESS Sizing Results</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Units</th>
+                    <th>Threshold (kW)</th>
+                    <th>Peak Reduction (kW)</th>
+                    <th>Energy Shaved (kWh)</th>
+                    <th>Payback Period (Years)</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <!-- Results will be populated here -->
+            </tbody>
+        </table>
+
+        <button onclick="runBESSCalculation()">Run BESS Sizing</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
