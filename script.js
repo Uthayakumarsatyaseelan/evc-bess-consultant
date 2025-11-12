@@ -10,22 +10,19 @@ function processFile() {
         return;
     }
 
-    console.log("File selected:", file.name);  // Debugging line
-
     const reader = new FileReader();
 
     reader.onload = function(e) {
-        console.log("File read successfully");  // Debugging line
         const data = e.target.result;
+        let extension = file.name.split('.').pop().toLowerCase();
 
-        // Determine the file type (Excel or CSV)
-        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        if (extension === 'xlsx' || extension === 'xls') {
             const workbook = XLSX.read(data, { type: 'binary' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
             // Parse the data into a JSON array
             loadProfileData = XLSX.utils.sheet_to_json(sheet);
-        } else if (file.name.endsWith('.csv')) {
+        } else if (extension === 'csv') {
             const textData = data.split('\n').map(line => line.split(','));
 
             // Parse CSV into an array of objects
@@ -34,15 +31,18 @@ function processFile() {
                 Time: row[1],
                 Power_kW: parseFloat(row[2])
             }));
+        } else {
+            alert("Invalid file type. Please upload an Excel or CSV file.");
+            return;
         }
 
+        // Validate the uploaded data
         if (!validateData(loadProfileData)) {
             alert("The uploaded file must contain 'Date', 'Time', and 'Power_kW' columns.");
             return;
         }
 
-        console.log("Data after parsing:", loadProfileData);  // Debugging line
-        // Perform the computation and display results
+        // Proceed with computation
         computeBESS();
     };
 
@@ -60,9 +60,6 @@ function validateData(data) {
 
 // Perform BESS calculation based on the loaded data
 function computeBESS() {
-    console.log("Computing BESS calculations...");  // Debugging line
-
-    // Preprocess the data (similar to MATLAB code)
     const dateTimeData = loadProfileData.map(row => new Date(row.Date + ' ' + row.Time));
     const powerData = loadProfileData.map(row => row.Power_kW);
 
