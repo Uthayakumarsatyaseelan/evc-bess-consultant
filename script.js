@@ -1,6 +1,6 @@
 let loadProfileData = []; // This will store the data from the uploaded Excel file
 
-// Handle file upload and parse the Excel file
+// Handle file upload and parse the Excel or CSV file
 function processFile() {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
@@ -14,14 +14,27 @@ function processFile() {
 
     reader.onload = function(e) {
         const data = e.target.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        
-        // Parse the data into a JSON array
-        loadProfileData = XLSX.utils.sheet_to_json(sheet);
+
+        // Determine the file type (Excel or CSV)
+        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            // Parse the data into a JSON array
+            loadProfileData = XLSX.utils.sheet_to_json(sheet);
+        } else if (file.name.endsWith('.csv')) {
+            const textData = data.split('\n').map(line => line.split(','));
+
+            // Parse CSV into an array of objects
+            loadProfileData = textData.slice(1).map(row => ({
+                Date: row[0],
+                Time: row[1],
+                Power_kW: parseFloat(row[2])
+            }));
+        }
 
         if (!validateData(loadProfileData)) {
-            alert("The Excel file must contain Date, Time, and Power_kW columns.");
+            alert("The uploaded file must contain 'Date', 'Time', and 'Power_kW' columns.");
             return;
         }
 
@@ -29,7 +42,11 @@ function processFile() {
         computeBESS();
     };
 
-    reader.readAsBinaryString(file);
+    if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+    } else {
+        reader.readAsBinaryString(file);
+    }
 }
 
 // Validate the uploaded data structure
