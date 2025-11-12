@@ -10,9 +10,12 @@ function processFile() {
         return;
     }
 
+    console.log("File selected:", file.name);  // Debugging line
+
     const reader = new FileReader();
 
     reader.onload = function(e) {
+        console.log("File read successfully");  // Debugging line
         const data = e.target.result;
 
         // Determine the file type (Excel or CSV)
@@ -38,6 +41,7 @@ function processFile() {
             return;
         }
 
+        console.log("Data after parsing:", loadProfileData);  // Debugging line
         // Perform the computation and display results
         computeBESS();
     };
@@ -56,6 +60,8 @@ function validateData(data) {
 
 // Perform BESS calculation based on the loaded data
 function computeBESS() {
+    console.log("Computing BESS calculations...");  // Debugging line
+
     // Preprocess the data (similar to MATLAB code)
     const dateTimeData = loadProfileData.map(row => new Date(row.Date + ' ' + row.Time));
     const powerData = loadProfileData.map(row => row.Power_kW);
