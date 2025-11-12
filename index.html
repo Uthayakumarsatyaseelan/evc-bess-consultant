@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVC BESS Consultant</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For graphs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script> <!-- For reading Excel files -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- For plotting graphs -->
 </head>
 <body>
     <div class="header">
@@ -14,8 +15,8 @@
     </div>
 
     <div class="content">
-        <h2>Upload Load Profile (Excel)</h2>
-        <input type="file" id="fileInput" accept=".xlsx, .xls" />
+        <h2>Upload Load Profile (Excel or CSV)</h2>
+        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
         <button onclick="processFile()">Process File</button>
 
         <div id="message"></div>
